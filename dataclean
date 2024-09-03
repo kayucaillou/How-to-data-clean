@@ -1,0 +1,186 @@
+import os
+import datetime
+from tkinter import messagebox
+import threading
+import time
+import xlwings as xw
+import pandas as pd
+import sqlite3
+import unicodedata
+import csv
+import re
+import numpy as np
+
+error_log=[]
+
+hankaku_table = str.maketrans({
+    '1': '１',
+    '2': '２',
+    '3': '３',
+    '4': '４',
+    '5': '５',
+    '6': '６',
+    '7': '７',
+    '8': '８',
+    '9': '９',
+    '0': '０',
+})
+zenkaku_table = str.maketrans({
+    '１': '1',
+    '２': '2',
+    '３': '3',
+    '４': '4',
+    '５': '5',
+    '６': '6',
+    '７': '7',
+    '８': '8',
+    '９': '9',
+    '０': '0',
+})
+def do_convertBool(col, line_no):
+    global error_log
+    
+    if pd.isnull(col) or pd.isna(col):
+        return ""
+    if col == "TRUE":
+        return 1
+    elif col=="FALSE":
+        return 0
+    elif col == "0":
+        return 0
+    elif col == "1":
+        return 1
+    elif not is_num(col):
+        s="ConvertBool Error at: "+str(line_no)+" "+str(col)
+        error_log.append(s)
+        print(s)
+        return 0
+    elif int(col) > 0:
+        return 1
+    else:
+        return 0
+def tdo_convertBool(col, line_no):
+    global error_log
+    
+    if pd.isnull(col) or pd.isna(col):
+        return ""
+    if col == "TRUE":
+        return True
+    elif col=="FALSE":
+        return False
+    elif col == "0":
+        return False
+    elif col == "1":
+        return True
+    elif not is_num(col):
+        s="ConvertBool Error at: "+str(line_no)+" "+str(col)
+        error_log.append(s)
+        print(s)
+        return "0"
+    elif int(col) > 0:
+        return True
+    else:
+        return False
+def do_convertDate(col, line_no):
+    global error_log
+    
+    if pd.isnull(col) or pd.isna(col):
+        return ""
+    
+    if "." in col:
+        dil='%Y.%m.%d'
+    elif "/" in col:
+        dil='%Y/%m/%d'
+    elif "-" in col:
+        dil='%Y-%m-%d'
+    else:
+        s="ConvertDate Error at: "+str(line_no)+" "+str(col)
+        error_log.append(s)
+        print(s)
+        return ""
+    try:
+        dd=datetime.datetime.strptime(col, dil).date()
+    except:
+        if "." in col:
+            dil='%m.%d.%Y'
+        elif "/" in col:
+            dil='%m/%d/%Y'
+        elif "-" in col:
+            dil='%m-%d-%Y'
+        dd=datetime.datetime.strptime(col, dil).date()
+    
+
+    return dd
+def do_convertText(col):
+    global error_log
+    
+    if pd.isnull(col) or pd.isna(col):
+        return ""
+    col=unicodedata.normalize('NFKC', col)
+    col=col.replace("@","")
+    col=''.join(col.splitlines())
+    col=col.capitalize()
+    return col
+def do_convertNum(col, line_no):
+    global error_log
+    
+    if pd.isnull(col) or pd.isna(col):
+        return 0
+    col=unicodedata.normalize('NFKC', col)
+    col=col.replace("O","0")
+    col=col.replace(",","")
+    col=col.replace("$","")
+    col=col.translate(zenkaku_table)
+    if not is_num(col):
+        s="ConvertNum Error at: "+str(line_no)+" "+str(col)
+        error_log.append(s)
+        print(s)
+        col="0"
+    return col
+
+def is_num(s):
+    try:
+        float(s)
+    except Exception:
+        return False
+    else:
+        return True    
+def write_log():
+    with open('d:/convert.log', "w") as f:
+        for l in error_log:
+            f.write(l + "\n")
+
+df = pd.read_csv("data.csv", usecols=[0,1,2,3,4,5,6,7,8,9], names=["id", "h1", "h2","h3","h4","h5","h6","h7","h8","h9"], \
+        dtype={'id':str,'h1':str, 'h2':str, 'h3':str, 'h4':str, 'h5':str, 'h6':str, 'h7':str,'h8':str, 'h9':str}, skiprows=1)
+
+df_list = df.values.tolist()
+line_no=1
+result_list=[]
+for idd, h1, h2, h3, h4, h5, h6, h7, h8, h9 in df_list:
+    print(idd, h1, h2, h3, h4, h5, h6, h7, h8, h9)
+    h1_f=do_convertNum(h1, line_no)
+    h2_f=do_convertNum(h2, line_no)
+    h3_f=do_convertNum(h3, line_no)
+    h4_f=do_convertNum(h4, line_no)
+    h5_f=do_convertNum(h5, line_no)
+    h6_f=do_convertNum(h6, line_no)
+    h7_f=do_convertDate(h7, line_no)
+    h8_f=do_convertBool(h8, line_no)
+    h9_f=do_convertNum(h9, line_no)
+    line_no+=1
+    result_list.append([idd, h1_f, h2_f, h3_f, h4_f, h5_f, h6_f, h7_f, h8_f, h9_f])
+
+write_log()
+df=pd.DataFrame(result_list, columns=["id", "h1", "h2", "h3", "h4", "h5","h6","h7","h8","h9"])
+
+df["h1"]=df["h1"].astype('float').astype('int')
+df["h2"]=df["h2"].astype('float').astype('int')
+df["h3"]=df["h3"].astype('float').astype('int')
+df["h4"]=df["h4"].astype('float').astype('int')
+df["h5"]=df["h5"].astype('float').astype('int')
+df["h6"]=df["h6"].astype('float').astype('int')
+df["h8"]=df["h8"].astype('int')
+df["h9"]=df["h9"].astype('float')
+
+df.to_excel('data.xlsx',index=False)
+print(df)
