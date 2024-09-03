@@ -1,0 +1,33 @@
+pip install matplotlib seaborn
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+path=".csv"
+df = pd.read_csv(path)
+
+print(df.head())
+print(df.describe())
+print(df.info())
+
+df["*"].value_counts()
+df_dummies = pd.get_dummies(df, columns=['A', 'B'])
+# data = pd.concat([df, df_dummies], axis=1)
+df2 = df[['A', 'B']]
+
+print(df.isnull().sum())
+import missingno as msno
+msno.matrix(df)
+plt.show()
+missing_data = df.isnull()
+
+df_dropped = df.drop(columns=['A', 'C'])
+df['new_column'] # to add
+
+correlation_matrix = data.corr().round(2)
+sns.heatmap(data=correlation_matrix, annot=True, cmap='coolwarm')
+fig = plt.gcf()
+fig.set_size_inches(20, 10)
+plt.show()
