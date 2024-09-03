@@ -21,7 +21,7 @@ print(df.isnull().sum())
 import missingno as msno
 msno.matrix(df)
 plt.show()
-missing_data = df.isnull()
+missing_percentage = df.isnull().mean() * 100
 
 df_dropped = df.drop(columns=['A', 'C'])
 df['new_column'] # to add
