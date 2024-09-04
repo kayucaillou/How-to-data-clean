@@ -1,0 +1,68 @@
+df['A'] = df['A'].apply(lambda x: 1 if 40 <= x <= 60 else (0 if x < 40 and x >= 0 else -2))
+df['A'] = df['A'].apply(lambda x: 1 if 40 <= x <= 60 else (-2 if pd.isna(x) else 0))
+
+def categorize_value(x):
+    if pd.isna(x):
+        return -2
+    elif 40 <= x <= 60:
+        return 1
+    else:
+        return 0
+df['A'] = df['A'].apply(categorize_value)
+df['A'] = df['A'].apply(lambda x: -2 if pd.isna(x) or x == "" else (1 if x == "Y" else 0))
+
+df['A'] = df['A'].astype(int)
+#check for datatype
+
+def categorize_value(x):
+    if pd.isna(x):
+        return -2
+    elif x == "Y":
+        return 1
+    else:
+        return 0
+
+df['A'] = df['B'] / df['A']
+df['A'] = np.where(df['A'].notna() & (df['A'] != 0), df['B'] / df['A'], np.nan)
+check if there are no 0 or Nan
+df1 = df1.join(df2[['Environmental_score']])
+df1 = df1.join(df2[['existing_column_name', 'existing_column_name2']])
+
+column_to_add = df2['A']
+df1.insert(0, 'A', column_to_add)
+# need to add company code in the 1st column
+
+Normalize the varaibles
+Min-Max Normalization
+df['normalized_var'] = (df['var'] - df['var'].min()) / (df['var'].max() - df['var'].min())
+df['CO2_Normalized'] = (df['CO2_Emissions'] - df['CO2_Emissions'].min()) / (df['CO2_Emissions'].max() - df['CO2_Emissions'].min())
+df['Recyclability_Normalized'] = (df['Recyclability'] - df['Recyclability'].min()) / (df['Recyclability'].max() - df['Recyclability'].min())
+df['Waste_Normalized'] = (df['Waste'] - df['Waste'].min()) / (df['Waste'].max() - df['Waste'].min())
+
+Z-score
+df['standardized_var'] = (df['var'] - df['var'].mean()) / df['var'].std()
+
+
+df2['Environmental_score'] = df2[['E_var1', 'E_var2', 'E_var3']].mean(axis=1)
+df['Environmental_score'] = (df['CO2_Emissions'] + df['Recyclability'] + df['Waste']) / 3
+# adds new column to dataset
+
+Just in case
+weights = {'E_var1': 0.4, 'E_var2': 0.3, 'E_var3': 0.3}
+df2['Environmental_score'] = (df2['E_var1'] * weights['E_var1'] +
+                              df2['E_var2'] * weights['E_var2'] +
+                              df2['E_var3'] * weights['E_var3'])
+
+
+# Calculate the Environmental_score
+df['Environmental_score'] = (df['CO2_Normalized'] + df['Recyclability_Normalized'] + df['Waste_Normalized']) / 3
+
+# Multiply by the weight (50% or 0.5)
+df['Environmental_weighted'] = df['Environmental_score'] * 0.5
+
+# Assume you have calculated Social and Governance scores similarly
+df['Social_weighted'] = df['Social_score'] * 0.25  # Example weight
+df['Governance_weighted'] = df['Governance_score'] * 0.25  # Example weight
+
+# Calculate the final ESG score by combining the weighted scores
+df['ESG_score'] = df['Environmental_weighted'] + df['Social_weighted'] + df['Governance_weighted']
